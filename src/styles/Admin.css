@@ -1,0 +1,98 @@
+.admin-page{
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+    padding: 100px var(--spacing-md) var(--spacing-xl);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.admin-home-card{
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+}
+
+.admin-home-card:hover{
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.admin-home-card h5{
+    color: rgba(255,255,255,0.9);
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.admin-home-card p{
+    color: rgba(255,255,255,0.7);
+    font-size: 2rem;
+    font-weight: bold;
+    margin: var(--spacing-md) 0;
+}
+
+.admin-home-card button{
+    background: transparent;
+    border: 2px solid var(--warning);
+    color: var(--warning);
+    padding: 10px 28px;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    transition: var(--transition);
+    margin-top: var(--spacing-sm);
+}
+
+.admin-home-card button:hover{
+    background: var(--warning);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+}
+
+.admin-banner-input{
+    grid-column: span 2;
+    padding: var(--spacing-xl);
+}
+
+.admin-banner-input h5{
+    margin-bottom: var(--spacing-md);
+    color: rgba(255,255,255,0.9);
+}
+
+.admin-banner-input input{
+    background: rgba(255,255,255,0.05);
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,0.2);
+    width: 100%;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.admin-banner-input input:focus{
+    background: rgba(255,255,255,0.08);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.admin-banner-input button{
+    margin-top: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+    .admin-page{
+        grid-template-columns: 1fr;
+    }
+    .admin-banner-input{
+        grid-column: span 1;
+    }
+}

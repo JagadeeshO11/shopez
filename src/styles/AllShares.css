@@ -1,0 +1,43 @@
+.all-shares-page {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  min-height: 100vh;
+  padding: 100px var(--spacing-lg) var(--spacing-xl);
+}
+
+.all-shares-page h3 {
+  color: rgba(255,255,255,0.9);
+  margin-bottom: var(--spacing-lg);
+  font-size: 1.8rem;
+}
+
+.shares-table {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  overflow-x: auto;
+}
+
+.shares-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shares-table th {
+  color: rgba(255,255,255,0.9);
+  text-align: left;
+  padding: var(--spacing-md);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+  font-weight: 600;
+}
+
+.shares-table td {
+  color: rgba(255,255,255,0.7);
+  padding: var(--spacing-md);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.shares-table tr:hover {
+  background: rgba(255,255,255,0.05);
+}

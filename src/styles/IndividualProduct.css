@@ -1,0 +1,224 @@
+.IndividualProduct-page{
+    margin-top: 15vh;
+}
+
+.IndividualProduct-page span{
+    display: flex;
+    align-items: center;
+    font-size: 1.4rem;
+    cursor: pointer;
+    margin-left: 10px;
+}
+.IndividualProduct-page span p{
+    padding-bottom: 3px;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.IndividualProduct-body{
+    display: flex;
+    margin-top: 3vh;
+}
+
+.IndividualProduct-body .carousel{
+
+    width: 40%;
+    margin: 0 5%;
+    height: 70vh;
+    border-radius: 0.4rem;
+    overflow: hidden;
+}
+
+.IndividualProduct-body .carousel img{
+    height: 70vh;
+    width: 50%;
+}
+
+.carousel-control-prev span, .carousel-control-next span{
+    background-color: #c0bfcaa6;
+    padding: 10px;
+    border-radius: 50%;
+}
+
+.IndividualProduct-data{
+    margin-top: 1vh;
+    width: 46%;
+}
+
+.IndividualProduct-data h3{
+
+    color: rgb(71, 99, 137);
+}
+
+.IndividualProduct-data p{
+    color: rgb(87, 88, 90);
+    
+}
+.IndividualProduct-data span{
+    
+    margin: 0;
+    display: flex;
+    gap: 5px;
+}
+.IndividualProduct-data span h5{
+    font-size: 1.2rem;
+    margin: 0;
+    color: rgb(44, 87, 99);
+}
+.IndividualProduct-data span h5 b{
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.IndividualProduct-data span s{
+    color: rgb(239, 91, 103);
+    font-size: 1rem;
+}
+.IndividualProduct-data span p{
+
+    color: rgb(7, 92, 152);
+}
+
+.IndividualProduct-data h6{
+    color: rgb(96, 112, 127);
+    margin-top: 3vh;
+}
+
+.IndividualProduct-data h6 b{
+
+    font-weight: 600;
+}
+
+.IndividualProduct-data span label{
+
+    color: rgb(49, 76, 95);
+    font-size: 1.1rem;
+    margin-bottom: 3vh;
+}
+
+.IndividualProduct-data span select{
+    font-size: 1rem;
+    color: rgb(7, 92, 152);
+    margin-bottom: 2.5vh;
+}
+.IndividualProduct-data span select option{
+
+    color: rgb(7, 92, 152);
+}
+
+
+.productBuyingButtons{
+    margin-top: 10vh;
+    display: flex;
+    gap: 20px;
+
+}
+
+.productBuyingButtons button{
+    width: 200px;
+    padding: 10px 0;
+    font-weight: 500;
+    border: none;
+    border-radius: 0.2rem;
+}
+.productBuyingButtons button:first-child{
+    background-color: #504aec;
+    color: aliceblue;
+}
+.productBuyingButtons button:last-child{
+    background-color: #eb5a12;
+    color: aliceblue;
+}
+
+.productBuyingButtons .share-btn{
+    background-color: #2ecc71;
+    color: aliceblue;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.productBuyingButtons .share-btn:hover{
+    background-color: #27ae60;
+    transform: translateY(-2px);
+}
+
+.productBuyingButtons .share-btn:active{
+    animation: shareClick 0.3s ease;
+}
+
+.productBuyingButtons .share-btn svg{
+    font-size: 1.2rem;
+    animation: shareIcon 2s ease-in-out infinite;
+}
+
+@keyframes shareClick {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes shareIcon {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+.related-products{
+    margin: var(--spacing-xl) auto;
+    max-width: 1400px;
+    padding: 0 var(--spacing-lg);
+}
+
+.related-products h3{
+    color: var(--dark);
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.8rem;
+}
+
+.related-products-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.related-product-card{
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.related-product-card:hover{
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.related-product-card img{
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+}
+
+.related-product-card h6{
+    padding: var(--spacing-md);
+    margin: 0;
+    color: var(--dark);
+    font-size: 1rem;
+}
+
+.related-product-card p{
+    padding: 0 var(--spacing-md) var(--spacing-md);
+    margin: 0;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.related-product-card p s{
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin-left: var(--spacing-xs);
+}
