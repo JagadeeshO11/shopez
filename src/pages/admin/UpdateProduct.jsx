@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import '../../styles/NewProducts.css'
 import axios from 'axios';
 import {useNavigate, useParams} from 'react-router-dom';
+import { API_BASE } from '../../config';
 
 const UpdateProduct = () => {
   const {id} = useParams();
@@ -20,53 +21,67 @@ const UpdateProduct = () => {
   const [AvailableCategories, setAvailableCategories] = useState([]);
   const navigate = useNavigate();
 
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:6001/fetch-product-details/${id}`);
-      setProductName(response.data.title);
-      setProductDescription(response.data.description);
-      setProductMainImg(response.data.mainImg);
-      setProductCarouselImg1(response.data.carousel?.[0] || '');
-      setProductCarouselImg2(response.data.carousel?.[1] || '');
-      setProductCarouselImg3(response.data.carousel?.[2] || '');
-      setProductSizes(response.data.sizes || []);
-      setProductGender(response.data.gender || '');
-      setProductCategory(response.data.category || '');
-      setProductPrice(response.data.price || 0);
-      setProductDiscount(response.data.discount || 0);
+      const response = await axios.get(`${API_BASE}/api/v1/products/${id}`);
+      const product = response.data.product || {};
+      setProductName(product.name || product.title || '');
+      setProductDescription(product.description || '');
+      setProductMainImg(product.image || product.mainImg || '');
+      setProductCarouselImg1(product.images?.[0] || product.carousel?.[0] || '');
+      setProductCarouselImg2(product.images?.[1] || product.carousel?.[1] || '');
+      setProductCarouselImg3(product.images?.[2] || product.carousel?.[2] || '');
+      setProductSizes(product.sizes || []);
+      setProductGender(product.gender || '');
+      setProductCategory(product.category || '');
+      setProductPrice(product.price || 0);
+      setProductDiscount(product.discount || 0);
     } catch (error) {
       console.error('Failed to fetch product:', error);
     }
-  };
+  }, [id]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:6001/fetch-categories');
-      setAvailableCategories(response.data);
+      const response = await axios.get(`${API_BASE}/api/v1/products/categories`);
+      setAvailableCategories(response.data.categories || []);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCategories();
     fetchProduct();
-  }, [id]);
+  }, [fetchCategories, fetchProduct]);
 
   const handleCheckBox = (e) => {
     const value = e.target.value;
     if(e.target.checked){
-      setProductSizes([...productSizes, value]);
+      setProductSizes(current => [...current, value]);
     } else {
-      setProductSizes(productSizes.filter(size=> size !== value));
+      setProductSizes(current => current.filter(size=> size !== value));
     }
   };
 
   const handleUpdateProduct = async () => {
-    await axios.put(`http://localhost:6001/update-product/${id}`, {productName, productDescription, productMainImg, productCarousel: [productCarouselImg1, productCarouselImg2, productCarouselImg3], productSizes, productGender, productCategory, productNewCategory, productPrice, productDiscount}).then(() => {
-      alert('product updated');
-      navigate('/products');
-    });
+    try {
+      await axios.put(`${API_BASE}/api/v1/products/${id}`, {
+        name: productName,
+        description: productDescription,
+        image: productMainImg,
+        images: [productCarouselImg1, productCarouselImg2, productCarouselImg3].filter(Boolean),
+        sizes: productSizes,
+        gender: productGender,
+        category: productCategory === 'new category' ? productNewCategory : productCategory,
+        price: Number(productPrice),
+        discount: Number(productDiscount)
+      });
+      alert('Product updated');
+      navigate('/all-products');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Product update failed');
+    }
   };
 
   return (
