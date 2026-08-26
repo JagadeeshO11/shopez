@@ -1,49 +1,67 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import '../../styles/Cart.css'
 import axios from 'axios';
 import {useNavigate} from 'react-router-dom';
-
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:6001';
+import { API_BASE } from '../../config';
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId');
 
-  const fetchCart = async () => {
-    if(userId){
-      try {
-        const response = await axios.get(`${API_BASE}/fetch-cart`);
-        setCartItems(response.data.filter(item=> item.userId === userId).reverse());
-      } catch (error) {
-        console.error('Failed to fetch cart:', error);
-      }
+  const normalizeItems = (cart) => (cart?.items || []).map(item => {
+    const product = item.product || {};
+    const price = Number(product.price || 0);
+    const originalPrice = Number(product.originalPrice || price);
+    return {
+      ...item,
+      title: product.name || product.title || 'Product',
+      description: product.description || '',
+      mainImg: product.image || product.mainImg || '',
+      price,
+      discount: originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0,
+      quantity: Number(item.quantity || 1)
+    };
+  });
+
+  const fetchCart = useCallback(async () => {
+    if (!userId || !localStorage.getItem('token')) return;
+    try {
+      const { data } = await axios.get(`${API_BASE}/api/v1/cart`);
+      setCartItems(normalizeItems(data.cart));
+    } catch (error) {
+      console.error('Failed to fetch cart:', error);
     }
-  };
+  }, [userId]);
 
   useEffect(()=>{
     fetchCart();
-  }, [userId]);
+  }, [fetchCart]);
 
   const removeItem = async(id) => {
-    await axios.put(`${API_BASE}/remove-item`, {id}).then(fetchCart);
+    try {
+      await axios.delete(`${API_BASE}/api/v1/cart/items/${id}`);
+      await fetchCart();
+    } catch (error) {
+      console.error('Failed to remove cart item:', error);
+    }
   };
 
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [deliveryCharges, setDeliveryCharges] = useState(0)
 
-  const calculateTotalPrice = () => {
+  const calculateTotalPrice = useCallback(() => {
     const mrp = cartItems.reduce((sum, product) => sum + (product.price * product.quantity), 0);
-    const discount = cartItems.reduce((sum, product)=> sum + ((product.price * product.discount)/100 )* product.quantity, 0);
+    const discount = cartItems.reduce((sum, product)=> sum + (((product.price * product.discount) / 100) * product.quantity), 0);
     setTotalPrice(mrp);
     setTotalDiscount(Math.floor(discount));
     setDeliveryCharges(mrp > 1000 || cartItems.length === 0 ? 0 : 50);
-  };
+  }, [cartItems]);
 
   useEffect(()=>{
     calculateTotalPrice();
-  }, [cartItems]);
+  }, [calculateTotalPrice]);
 
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -54,11 +72,19 @@ const Cart = () => {
 
   const placeOrder = async() => {
     if(cartItems.length > 0){
-      await axios.post(`${API_BASE}/place-cart-order`, {userId, name, mobile, email, address, pincode, paymentMethod, orderDate: new Date()}).then(() => {
+      try {
+        await axios.post(`${API_BASE}/api/v1/orders`, {
+          items: cartItems.map(item => ({ product: item.product?._id || item.product, quantity: item.quantity, size: item.size, color: item.color })),
+          shippingAddress: { name, mobile, email, address, pincode },
+          paymentMethod,
+          shippingFee: deliveryCharges
+        });
         alert('Order placed!!');
         setName(''); setMobile(''); setEmail(''); setAddress(''); setPincode(''); setPaymentMethod('');
         navigate('/profile');
-      });
+      } catch (error) {
+        alert(error.response?.data?.message || 'Order failed');
+      }
     }
   };
 
