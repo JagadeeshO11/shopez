@@ -13,7 +13,6 @@ const IndividualProduct = () => {
 
   const [productName, setProductName] = useState('');
   const [productDescription, setProductDescription] = useState('');
-  const [productMainImg, setProductMainImg] = useState('');
   const [productCarouselImg1, setProductCarouselImg1] = useState('');
   const [productCarouselImg2, setProductCarouselImg2] = useState('');
   const [productCarouselImg3, setProductCarouselImg3] = useState('');
@@ -46,7 +45,6 @@ const IndividualProduct = () => {
       const product = normalizeProduct(response.data.product || {});
       setProductName(product.title || '');
       setProductDescription(product.description || '');
-      setProductMainImg(product.mainImg || '');
       setProductCarouselImg1(product.images?.[0] || product.mainImg || '');
       setProductCarouselImg2(product.images?.[1] || product.mainImg || '');
       setProductCarouselImg3(product.images?.[2] || product.mainImg || '');
