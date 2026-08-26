@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import '../styles/Products.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,7 @@ const Products = (props) => {
   const [categoryFilter, setCategoryFilter] = useState([]);
   const [genderFilter, setGenderFilter] = useState([]);
 
-  const normalizeProduct = (product) => {
+  const normalizeProduct = useCallback((product) => {
     const originalPrice = Number(product.originalPrice || product.price || 0);
     const price = Number(product.price || 0);
     return {
@@ -26,9 +26,9 @@ const Products = (props) => {
       discount: product.discount ?? (originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0),
       gender: product.gender || 'Unisex'
     };
-  };
+  }, []);
 
-  const fetchWishlist = async () => {
+  const fetchWishlist = useCallback(async () => {
     if (!userId || !localStorage.getItem('token')) return;
     try {
       const { data } = await axios.get(`${API_BASE}/api/v1/wishlist`);
@@ -36,9 +36,9 @@ const Products = (props) => {
     } catch (error) {
       console.error('Failed to fetch wishlist:', error);
     }
-  };
+  }, [normalizeProduct, userId]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [productsResponse, categoriesResponse] = await Promise.all([
         axios.get(`${API_BASE}/api/v1/products`),
@@ -51,12 +51,12 @@ const Products = (props) => {
     } catch (error) {
       console.error('Failed to fetch products:', error);
     }
-  };
+  }, [normalizeProduct, props.category]);
 
   useEffect(() => {
     fetchData();
     fetchWishlist();
-  }, [props.category, userId]);
+  }, [fetchData, fetchWishlist]);
 
   const handleCategoryCheckBox = (e) => {
     const value = e.target.value;
