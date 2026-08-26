@@ -1,11 +1,8 @@
-import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Authentication from './pages/Authentication';
-import ChipLoader from './components/ChipLoader';
-import { LoadingProvider, useLoading } from './context/LoadingContext';
 import Cart from './pages/customer/Cart';
 import Profile from './pages/customer/Profile';
 import CategoryProducts from './pages/customer/CategoryProducts';
@@ -24,26 +21,9 @@ function AppContent() {
   const userType = localStorage.getItem('userType');
   const isAdmin = userType === 'admin';
   const isCustomer = userType === 'customer';
-  const location = useLocation();
-  const { isLoading, showLoading, hideLoading } = useLoading();
-
-  useEffect(() => {
-    showLoading();
-    const timer = setTimeout(() => hideLoading(), 500);
-    return () => clearTimeout(timer);
-  }, [location.pathname, showLoading, hideLoading]);
 
   return (
     <div className="App">
-      {isLoading && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(255, 255, 255, 0.9)', zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <ChipLoader />
-        </div>
-      )}
       {isAdmin ? <AdminNavbar /> : <Navbar />}
       <Routes>
         <Route path="/auth" element={<Authentication />} />
@@ -75,11 +55,7 @@ function AppContent() {
 }
 
 function App() {
-  return (
-    <LoadingProvider>
-      <AppContent />
-    </LoadingProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;
