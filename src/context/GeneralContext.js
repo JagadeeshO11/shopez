@@ -1,111 +1,82 @@
 import React, { createContext, useEffect, useState } from 'react';
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { API_BASE } from '../config';
 
 export const GeneralContext = createContext();
 
-const GeneralContextProvider = ({children}) => {
-
-
+const GeneralContextProvider = ({ children }) => {
   const navigate = useNavigate();
-
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [usertype, setUsertype] = useState('');
-
-
   const [productSearch, setProductSearch] = useState('');
-
   const [cartCount, setCartCount] = useState(0);
 
+  const fetchCartCount = async () => {
+    if (!localStorage.getItem('userId') || !localStorage.getItem('token')) return;
+    try {
+      const response = await axios.get(`${API_BASE}/api/v1/cart`);
+      setCartCount(response.data.cart?.items?.length || 0);
+    } catch (error) {
+      console.error('Failed to fetch cart count:', error);
+      setCartCount(0);
+    }
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchCartCount();
-  }, [])
+  }, []);
 
-  const fetchCartCount = async() =>{
-    const userId = localStorage.getItem('userId');
-    if(userId){
-      await axios.get('http://localhost:6001/fetch-cart').then(
-        (response)=>{
-          setCartCount(response.data.filter(item=> item.userId === userId).length);
-        }
-      )
+  const handleSearch = () => navigate('#products-body');
+
+  const saveSession = (user, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('userId', user.id);
+    localStorage.setItem('userType', user.role);
+    localStorage.setItem('username', user.name);
+    localStorage.setItem('email', user.email);
+  };
+
+  const login = async () => {
+    try {
+      const { data } = await axios.post(`${API_BASE}/api/v1/auth/login`, { email, password });
+      saveSession(data.user, data.token);
+      navigate('/');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Login failed.');
     }
-  }
+  };
 
-  const handleSearch = () =>{
-    navigate('#products-body')
-  }
-
-
-  
-  
-  
-  const login = async () =>{
-    try{
-      const loginInputs = {email, password}
-        await axios.post('http://localhost:6001/login', loginInputs)
-        .then( async (res)=>{
-
-          localStorage.setItem('userId', res.data._id);
-            localStorage.setItem('userType', res.data.usertype);
-            localStorage.setItem('username', res.data.username);
-            localStorage.setItem('email', res.data.email);
-            if(res.data.usertype === 'customer'){
-                navigate('/');
-            } else if(res.data.usertype === 'admin'){
-                navigate('/');
-            }
-          }).catch((err) =>{
-            alert("login failed!!");
-            console.log(err);
-          });
-          
-        }catch(err){
-          console.log(err);
-        }
-      }
-      
-  const inputs = {username, email, usertype, password};
-
-  const register = async () =>{
-    try{
-        await axios.post('http://localhost:6001/register', inputs)
-        .then( async (res)=>{
-            localStorage.setItem('userId', res.data._id);
-            localStorage.setItem('userType', res.data.usertype);
-            localStorage.setItem('username', res.data.username);
-            localStorage.setItem('email', res.data.email);
-
-            if(res.data.usertype === 'customer'){
-                navigate('/');
-            } else if(res.data.usertype === 'admin'){
-                navigate('/');
-            }
-
-        }).catch((err) =>{
-            alert("registration failed!!");
-            console.log(err);
-        });
-    }catch(err){
-        console.log(err);
+  const register = async () => {
+    try {
+      const { data } = await axios.post(`${API_BASE}/api/v1/auth/register`, {
+        name: username,
+        email,
+        password
+      });
+      saveSession(data.user, data.token);
+      navigate('/');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Registration failed.');
     }
-  }
+  };
 
-
-
-  const logout = async () =>{
+  const logout = () => {
     localStorage.clear();
     window.location.href = '/auth';
-  }
-
-
+  };
 
   return (
-    <GeneralContext.Provider value={{login, register, logout, username, setUsername, email, setEmail, password, setPassword, usertype, setUsertype, productSearch, setProductSearch, handleSearch, cartCount}} >{children}</GeneralContext.Provider>
-  )
-}
+    <GeneralContext.Provider value={{
+      login, register, logout, username, setUsername, email, setEmail,
+      password, setPassword, usertype, setUsertype, productSearch,
+      setProductSearch, handleSearch, cartCount, fetchCartCount
+    }}>
+      {children}
+    </GeneralContext.Provider>
+  );
+};
 
-export default GeneralContextProvider
+export default GeneralContextProvider;
