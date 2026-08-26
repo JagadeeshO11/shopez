@@ -1,34 +1,3 @@
-.HomePage{ margin-top: 90px; background: var(--light); }
-.home-banner{ padding: var(--spacing-md); }
-.home-banner img{ height: 400px; width: 100%; object-fit: cover; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); transition: var(--transition); }
-.home-banner img:hover{ transform: scale(1.02); }
-.home-categories-container{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--spacing-lg); padding: var(--spacing-xl) var(--spacing-md); max-width: 1400px; margin: 0 auto; }
-.home-category-card{ text-align: center; overflow: hidden; border-radius: var(--radius-lg); cursor: pointer; background: var(--white); box-shadow: var(--shadow-sm); transition: var(--transition); position: relative; }
-.home-category-card:hover{ transform: translateY(-8px); box-shadow: var(--shadow-lg); }
-.home-category-card img{ width: 100%; height: 220px; object-fit: cover; transition: var(--transition); }
-.home-category-card:hover img{ transform: scale(1.1); }
-.home-category-card h5{ position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: var(--white); padding: var(--spacing-md); margin: 0; font-size: 1.1rem; font-weight: 600; }
-
-@media (max-width: 768px) {
-  .HomePage { margin-top: 120px; }
-  .home-banner { padding: 10px; }
-  .home-banner img {
-    height: 210px;
-    min-height: 210px;
-    border-radius: 14px;
-  }
-  .home-categories-container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    padding: 14px 10px 24px;
-  }
-  .home-category-card { border-radius: 12px; }
-  .home-category-card img { height: 145px; }
-  .home-category-card h5 { padding: 10px 7px 8px; font-size: 0.9rem; }
-}
-
-@media (max-width: 380px) {
-  .home-banner img { height: 185px; min-height: 185px; }
-  .home-category-card img { height: 125px; }
-  .home-category-card h5 { font-size: 0.82rem; }
-}
+.HomePage{margin-top:90px;background:var(--light)}.home-banner{padding:var(--spacing-md)}.home-banner img{height:400px;width:100%;object-fit:cover;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);transition:var(--transition)}.home-banner img:hover{transform:scale(1.02)}.home-categories-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--spacing-lg);padding:var(--spacing-xl) var(--spacing-md);max-width:1400px;margin:0 auto}.home-category-card{text-align:center;overflow:hidden;border-radius:var(--radius-lg);cursor:pointer;background:var(--white);box-shadow:var(--shadow-sm);transition:var(--transition);position:relative}.home-category-card:hover{transform:translateY(-8px);box-shadow:var(--shadow-lg)}.home-category-card img{width:100%;height:220px;object-fit:cover;transition:var(--transition)}.home-category-card:hover img{transform:scale(1.1)}.home-category-card h5{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,.8),transparent);color:var(--white);padding:var(--spacing-md);margin:0;font-size:1.1rem;font-weight:600}
+@media (max-width:768px){.HomePage{margin-top:120px}.home-banner{padding:8px}.home-banner img{height:195px;min-height:195px;border-radius:12px}.home-categories-container{display:flex;overflow-x:auto;overflow-y:hidden;gap:9px;padding:8px 10px 16px;margin:0;max-width:none;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}.home-categories-container::-webkit-scrollbar{display:none}.home-category-card{flex:0 0 92px;width:92px;height:112px;border-radius:10px;scroll-snap-align:start;box-shadow:var(--shadow-sm)}.home-category-card:hover{transform:none}.home-category-card img{width:100%;height:112px;object-fit:cover}.home-category-card h5{padding:18px 5px 7px;font-size:.7rem;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,.35)}.home-category-card:hover img{transform:none}}
+@media (max-width:380px){.home-banner img{height:180px;min-height:180px}.home-categories-container{gap:8px;padding-left:8px;padding-right:8px}.home-category-card{flex-basis:84px;width:84px;height:104px}.home-category-card img{height:104px}.home-category-card h5{font-size:.66rem}}
