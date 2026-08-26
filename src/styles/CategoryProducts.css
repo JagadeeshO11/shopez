@@ -1,8 +1,2 @@
-.categoryProducts-page{
-    margin-top: 15vh;
-}
-
-.categoryProducts-page h2{
-    margin: 3vh 2vw;
-    color: rgb(76, 105, 128);
-}
+.categoryProducts-page{margin-top:15vh}.categoryProducts-page h2{margin:3vh 2vw;color:rgb(76,105,128)}
+@media (max-width:768px){.categoryProducts-page{margin-top:0}.categoryProducts-page h2{margin:130px 12px 8px;font-size:1.35rem}.categoryProducts-page footer{margin-top:10px}}
