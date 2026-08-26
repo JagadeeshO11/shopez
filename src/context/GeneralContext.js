@@ -14,20 +14,21 @@ const GeneralContextProvider = ({ children }) => {
   const [productSearch, setProductSearch] = useState('');
   const [cartCount, setCartCount] = useState(0);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+    fetchCartCount();
+  }, []);
+
   const fetchCartCount = async () => {
     if (!localStorage.getItem('userId') || !localStorage.getItem('token')) return;
     try {
-      const response = await axios.get(`${API_BASE}/api/v1/cart`);
-      setCartCount(response.data.cart?.items?.length || 0);
+      const { data } = await axios.get(`${API_BASE}/api/v1/cart`);
+      setCartCount(data.cart?.items?.length || 0);
     } catch (error) {
-      console.error('Failed to fetch cart count:', error);
       setCartCount(0);
     }
   };
-
-  useEffect(() => {
-    fetchCartCount();
-  }, []);
 
   const handleSearch = () => navigate('#products-body');
 
@@ -37,6 +38,7 @@ const GeneralContextProvider = ({ children }) => {
     localStorage.setItem('userType', user.role);
     localStorage.setItem('username', user.name);
     localStorage.setItem('email', user.email);
+    axios.defaults.headers.common.Authorization = `Bearer ${token}`;
   };
 
   const login = async () => {
@@ -64,6 +66,7 @@ const GeneralContextProvider = ({ children }) => {
   };
 
   const logout = () => {
+    delete axios.defaults.headers.common.Authorization;
     localStorage.clear();
     window.location.href = '/auth';
   };
