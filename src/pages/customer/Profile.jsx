@@ -1,72 +1,53 @@
-import React, { useContext, useEffect, useState, useCallback } from 'react'
-import '../../styles/Profile.css'
-import { GeneralContext } from '../../context/GeneralContext'
+import React, { useEffect, useState } from 'react';
+import '../../styles/Profile.css';
 import axios from 'axios';
 import { API_BASE } from '../../config';
- 
-const Profile = () => {
-  const {logout} = useContext(GeneralContext);
-  const [orders, setOrders] = useState([]);
 
-  const fetchOrders = useCallback(async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/api/v1/orders/mine`);
-      setOrders(response.data.orders || []);
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-    }
-  }, []);
+const Profile = () => {
+  const [user, setUser] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    const load = async () => {
+      try {
+        const [userResponse, ordersResponse] = await Promise.all([
+          axios.get(`${API_BASE}/api/v1/users/me`),
+          axios.get(`${API_BASE}/api/v1/orders/mine`)
+        ]);
+        setUser(userResponse.data.user);
+        setOrders(ordersResponse.data.orders || []);
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const cancelOrder = async (id) => {
-    try {
-      await axios.patch(`${API_BASE}/api/v1/orders/${id}/status`, {status: 'cancelled'});
-      alert("Order cancelled!!");
-      fetchOrders();
-    } catch (error) {
-      alert(error.response?.data?.message || "Order cancellation failed!!");
-    }
-  };
+  if (loading) return <div className="profile-page"><p>Loading profile...</p></div>;
 
-  return ( 
-    <div className="profilePage">
-      <div className="profileCard">
-        <span><h5>Username: </h5><p>{localStorage.getItem('username')}</p></span>
-        <span><h5>Email: </h5><p>{localStorage.getItem('email')}</p></span>
-        <span><h5>Orders: </h5><p>{orders.length}</p></span>
-        <button className='btn btn-danger' onClick={logout}>Logout</button>
+  return (
+    <div className="profile-page">
+      <div className="profile-card">
+        <h3>{user?.name || 'Profile'}</h3>
+        <p>{user?.email}</p>
+        <p>{user?.phone || 'No phone added'}</p>
+        <p>{user?.address || 'No address added'}</p>
       </div>
-      <div className="profileOrders-container">
-        <h3>Orders</h3>
-        <div className="profileOrders">
-          {orders.map((order) => (
-            <div className="profileOrder" key={order._id}>
-              <img src={order.items?.[0]?.image || ''} alt={order.items?.[0]?.name || 'Product'} />
-              <div className="profileOrder-data">
-                <h4>{order.items?.[0]?.name || 'Order'}</h4>
-                <p>{order.items?.length || 0} item(s)</p>
-                <div>
-                  <span><p><b>Quantity: </b> {order.items?.reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</p></span>
-                  <span><p><b>Total: </b> ₹ {order.total}</p></span>
-                  <span><p><b>Payment method: </b> {order.paymentMethod}</p></span>
-                </div>
-                <div>
-                  <span><p><b>Ordered on: </b> {new Date(order.createdAt).toLocaleDateString()}</p></span>
-                  <span><p><b>Order status: </b> {order.status}</p></span>
-                </div>
-                {order.status !== 'delivered' && order.status !== 'cancelled' ?
-                  <button className='btn btn-danger' onClick={()=> cancelOrder(order._id)}>Cancel</button>
-                  : null}
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="orders-section">
+        <h3>My Orders</h3>
+        {orders.length === 0 ? <p>No orders yet.</p> : orders.map(order => (
+          <div className="order-card" key={order._id}>
+            <strong>Order #{order._id.slice(-6)}</strong>
+            <span>{order.status}</span>
+            <span>₹ {order.total}</span>
+          </div>
+        ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;
