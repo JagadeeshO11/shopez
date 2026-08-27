@@ -1,37 +1,22 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import '../styles/Home.css'
 import Products from '../components/Products'
 import Footer from '../components/Footer'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
-import { API_BASE } from '../config'
 
 const Home = () => {
   const navigate = useNavigate();
-  const [bannerImg, setBannerImg] = useState();
-
-  useEffect(()=>{
-    fetchBanner();
-  }, [])
-
-  const fetchBanner = async() =>{
-    try {
-      const response = await axios.get(`${API_BASE}/fetch-banner`);
-      setBannerImg(response.data);
-    } catch (error) {
-      console.error('Failed to load banner:', error);
-    }
-  }
+  const bannerImg = '/images/home-banner1.png';
 
   return (
     <div className="HomePage">
       <div className="home-banner">
-        {bannerImg ? <img src={bannerImg} alt="Store banner" /> : null}
+        <img src={bannerImg} alt="ShopEZ store banner" />
       </div>
 
       <div className="home-categories-container">
         <div className="home-category-card" onClick={()=>navigate('/category/Fashion')}>
-          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZQjXpWVVQhkT_A2n03XMo2KDV4yPSLBcoNA&usqp=CAU" alt="Fashion" />
+          <img src="/images/home-banner-2.png" alt="Fashion" />
           <h5>Fashion</h5>
         </div>
         <div className="home-category-card" onClick={()=>navigate('/category/Electronics')}>
