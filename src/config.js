@@ -1,1 +1,3 @@
-export const API_BASE = process.env.REACT_APP_API_URL || 'https://shopezbe.vercel.app';
+const API_BASE = 'https://shopezbe.vercel.app';
+
+export { API_BASE };
