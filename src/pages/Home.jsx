@@ -3,20 +3,21 @@ import '../styles/Home.css'
 import Products from '../components/Products'
 import Footer from '../components/Footer'
 import { useNavigate } from 'react-router-dom'
+import homeBanner1 from '../images/home-banner1.png'
+import homeBanner2 from '../images/home-banner-2.png'
 
 const Home = () => {
   const navigate = useNavigate();
-  const bannerImg = '/images/home-banner1.png';
 
   return (
     <div className="HomePage">
       <div className="home-banner">
-        <img src={bannerImg} alt="ShopEZ store banner" />
+        <img src={homeBanner1} alt="ShopEZ store banner" />
       </div>
 
       <div className="home-categories-container">
         <div className="home-category-card" onClick={()=>navigate('/category/Fashion')}>
-          <img src="/images/home-banner-2.png" alt="Fashion" />
+          <img src={homeBanner2} alt="Fashion" />
           <h5>Fashion</h5>
         </div>
         <div className="home-category-card" onClick={()=>navigate('/category/Electronics')}>
