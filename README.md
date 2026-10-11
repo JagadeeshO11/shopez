@@ -1,70 +1,92 @@
-# Getting Started with Create React App
+# ShopEZ | Phase 1 Storefront
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A responsive React storefront built as the first stage of a MERN e-commerce learning project.
 
-## Available Scripts
+> This is a frontend demo. Products are sample data in `src/App.js`; cart state is held in React memory. No real database, authentication, orders, or payments are connected yet.
 
-In the project directory, you can run:
+## Phase 1 features
 
-### `npm start`
+- Responsive storefront and navigation
+- Product cards, categories, search, sorting, ratings and sale pricing
+- Wishlist toggles
+- Interactive shopping bag with quantity controls and subtotal
+- Empty states, accessible labels and add-to-cart notifications
+- Mobile-friendly layout and reduced-motion support
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Run locally
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+This repository currently uses Create React App (React Scripts) rather than Vite. Keep the current package setup for Phase 1 to avoid mixing build systems during the first rebuild.
 
-### `npm test`
+1. Install Node.js LTS from https://nodejs.org/
+2. Clone the repository and change into its folder:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+   ```bash
+   git clone https://github.com/JagadeeshO11/shopez.git
+   cd shopez
+   ```
 
-### `npm run build`
+3. Switch to the feature branch:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+   ```bash
+   git checkout phase-1-storefront-rebuild
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. Install dependencies:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+   ```bash
+   npm install
+   ```
 
-### `npm run eject`
+5. Start the development server:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+   ```bash
+   npm start
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+6. Open http://localhost:3000
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+7. Check the production build:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+   ```bash
+   npm run build
+   ```
 
-## Learn More
+## How the code works
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- `src/App.js`: holds sample product data, page structure, category filtering, search, sorting, wishlist state, cart state and subtotal logic.
+- `src/App.css`: contains the storefront design system, responsive breakpoints, product grid, drawer and interaction states.
+- `src/index.js`: existing Create React App entry point. The rebuild deliberately leaves the app bootstrapping and installed dependencies intact.
+- `src/index.css`: existing global base styles. The storefront-specific design is scoped to `App.css`.
+- `public/index.html`: document metadata and the HTML root element used by React.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Teaching notes: the commands and why
 
-### Code Splitting
+| Command | Why we use it |
+| --- | --- |
+| `git clone <url>` | Creates a local copy of the repository. |
+| `git checkout phase-1-storefront-rebuild` | Moves work onto the feature branch instead of editing `main`. |
+| `npm install` | Installs the dependencies declared in `package.json`. |
+| `npm start` | Starts the local development server with hot reload. |
+| `npm run build` | Creates an optimized production build and catches many compile-time issues. |
+| `git status` | Shows files changed locally. |
+| `git add src/App.js src/App.css README.md` | Stages only the intended changes. |
+| `git commit -m "Build Phase 1 storefront"` | Records a checkpoint with a descriptive message. |
+| `git push -u origin phase-1-storefront-rebuild` | Uploads the feature branch to GitHub. |
+| `git diff` | Reviews what changed before committing. |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Suggested learning order
 
-### Analyzing the Bundle Size
+1. Read the `PRODUCTS` array and understand JavaScript objects and arrays.
+2. Learn React state: `useState` stores cart, category, search and sort choices.
+3. Learn derived data: `useMemo` filters and sorts products when relevant inputs change.
+4. Learn rendering arrays with `map()` and stable React `key` values.
+5. Learn event handlers such as `onClick` and `onChange`.
+6. Trace how `addToCart` updates quantities and how subtotal is calculated from product data.
+7. Read `App.css` from desktop styles to responsive media queries.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Next phases
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **Phase 2:** add Express API, MongoDB/Mongoose product model and API-driven product listing.
+- **Phase 3:** secure registration/login, customer order creation, server-side price and stock validation, admin-only product management.
+- **Phase 4:** integrate a payment provider with server-side verification and webhook handling.
+- **Before production:** add tests, error handling, image fallbacks, security headers, input validation, privacy/returns/shipping pages and real inventory data.
