@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
 const API_BASE_URL = (process.env.REACT_APP_API_URL || "https://shopezbe.vercel.app/api/v1").replace(/\/$/, "");
 const API_ROOT = API_BASE_URL.replace(/\/api\/v1$/, "");
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "";
 const API = axios.create({ baseURL: API_BASE_URL, timeout: 15000, withCredentials: true });
 let refreshRequest = null;
 const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value) || 0);
@@ -45,7 +46,10 @@ function App() {
   const [apiError, setApiError] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-  const [authForm, setAuthForm] = useState({ name: "", email: "", password: "", phone: "" });
+  const [authStep, setAuthStep] = useState("email");
+  const [otpCode, setOtpCode] = useState("");
+  const googleButtonRef = useRef(null);
+  const [authForm, setAuthForm] = useState({ name: "", email: "", phone: "" });
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem("shopez_user") || "null"); } catch { return null; }
   });
@@ -311,34 +315,104 @@ function App() {
     event.preventDefault();
     setBusy(true);
     try {
-      const path = authMode === "register" ? "/auth/register" : "/auth/login";
-      const payload = authMode === "register"
-        ? { name: authForm.name.trim(), email: authForm.email.trim(), password: authForm.password, phone: authForm.phone.trim() }
-        : { email: authForm.email.trim(), password: authForm.password };
-      const response = await API.post(path, payload);
-      const nextToken = response.data.accessToken;
+      if (authStep === "email") {
+        const response = await API.post("/auth/otp/request", { email: authForm.email.trim() });
+        setAuthStep("verify");
+        setOtpCode("");
+        notify(response.data.message || "Check your email for a six-digit code.");
+        return;
+      }
+      const response = await API.post("/auth/otp/verify", {
+        email: authForm.email.trim(),
+        code: otpCode.trim(),
+        name: authMode === "register" ? authForm.name.trim() : "",
+        phone: authMode === "register" ? (authForm.phone || "").trim() : "",
+      });
       localStorage.setItem("shopez_user", JSON.stringify(response.data.user));
-      setToken(nextToken);
+      setToken(response.data.accessToken || "");
       setSessionId(response.data.sessionId || "");
       setUser(response.data.user);
       setAuthOpen(false);
-      setAuthForm({ name: "", email: "", password: "", phone: "" });
-      notify(authMode === "register" ? "Your ShopEZ account is ready." : "Welcome back to ShopEZ.");
+      setAuthStep("email");
+      setOtpCode("");
+      setAuthForm({ name: "", email: "", phone: "" });
+      notify("You're signed in to ShopEZ.");
     } catch (error) {
-      notify(error.response?.data?.message || "Could not sign in. Check the backend connection.");
+      notify(error.response?.data?.message || "Could not complete sign-in. Check the backend connection.");
     } finally {
       setBusy(false);
     }
   };
 
+  useEffect(() => {
+    if (!authOpen || !GOOGLE_CLIENT_ID || !googleButtonRef.current) return undefined;
+    let disposed = false;
+    const renderGoogleButton = () => {
+      if (disposed || !window.google?.accounts?.id || !googleButtonRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (credentialResponse) => {
+          if (!credentialResponse?.credential) {
+            notify("Google did not return a valid sign-in credential.");
+            return;
+          }
+          setBusy(true);
+          try {
+            const response = await API.post("/auth/google", { credential: credentialResponse.credential });
+            localStorage.setItem("shopez_user", JSON.stringify(response.data.user));
+            setToken(response.data.accessToken || "");
+            setSessionId(response.data.sessionId || "");
+            setUser(response.data.user);
+            setAuthOpen(false);
+            setAuthStep("email");
+            setOtpCode("");
+            setAuthForm({ name: "", email: "", phone: "" });
+            notify("You're signed in to ShopEZ with Google.");
+          } catch (error) {
+            notify(error.response?.data?.message || "Google sign-in failed. Please try again.");
+          } finally {
+            setBusy(false);
+          }
+        },
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: 300,
+      });
+    };
+    const existingScript = document.querySelector('script[data-shopez-google="true"]');
+    if (window.google?.accounts?.id) {
+      renderGoogleButton();
+    } else if (existingScript) {
+      existingScript.addEventListener("load", renderGoogleButton, { once: true });
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.dataset.shopezGoogle = "true";
+      script.onload = renderGoogleButton;
+      script.onerror = () => notify("Could not load Google sign-in. Check your connection.");
+      document.head.appendChild(script);
+    }
+    return () => {
+      disposed = true;
+    };
+  }, [authOpen, notify]);
+
   const submitCheckout = async (event) => {
     event.preventDefault();
+    const phoneDigits = String(shipping.phone || "").replace(/\D/g, "");
+    const normalizedPhone = phoneDigits.length === 12 && phoneDigits.startsWith("91") ? phoneDigits.slice(2) : phoneDigits;
+    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      notify("Enter a valid 10-digit Indian mobile number.");
+      return;
+    }
     setBusy(true);
     try {
       const items = cartItems.map((item) => ({ product: getProductId(item.product), quantity: Number(item.quantity) }));
       const response = await API.post("/orders", {
         items,
-        shippingAddress: shipping,
+        shippingAddress: { ...shipping, phone: normalizedPhone, mobile: normalizedPhone },
         paymentMethod: "COD",
         shippingFee: subtotal >= 1499 ? 0 : 79,
       }, authorized());
@@ -411,12 +485,12 @@ function App() {
     </main>
     <footer className="site-footer"><a className="wordmark footer-wordmark" href="#top">shop<span>ez</span><i>.</i></a><span>Everyday finds, thoughtfully picked.</span><div><a href="#shop">Shop</a><a href="#story">About</a><a href="mailto:hello@shopez.example">Contact</a></div><small>© {new Date().getFullYear()} ShopEZ. Connected to ShopEZ API.</small></footer>
     {notice && <div className="toast" role="status"><span className="toast-check"><Icon name="check" size={16} /></span>{notice}</div>}
-    {authOpen && <div className="overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAuthOpen(false); }}><section className="cart-drawer auth-drawer" role="dialog" aria-modal="true" aria-labelledby="auth-title"><div className="drawer-heading"><div><span className="eyebrow">YOUR SHOP EZ ACCOUNT</span><h2 id="auth-title">{authMode === "register" ? "Join ShopEZ" : "Welcome back"}</h2></div><button className="icon-button" aria-label="Close sign in" onClick={() => setAuthOpen(false)}><Icon name="close" /></button></div><form className="auth-form" onSubmit={submitAuth}>{authMode === "register" && <label>Full name<input required autoComplete="name" value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} /></label>}<label>Email address<input required type="email" autoComplete="email" value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} /></label>{authMode === "register" && <label>Mobile number <span>(optional)</span><input type="tel" autoComplete="tel" value={authForm.phone} onChange={(event) => setAuthForm({ ...authForm, phone: event.target.value })} /></label>}<label>Password<input required type="password" minLength="8" autoComplete={authMode === "register" ? "new-password" : "current-password"} value={authForm.password} onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })} /></label><button className="primary-button checkout-button" type="submit" disabled={busy}>{busy ? "Please wait..." : authMode === "register" ? "Create account" : "Sign in"} <Icon name="arrow" size={18} /></button><p>{authMode === "register" ? "Already have an account?" : "New to ShopEZ?"} <button type="button" className="inline-action" onClick={() => setAuthMode(authMode === "register" ? "login" : "register")}>{authMode === "register" ? "Sign in" : "Create an account"}</button></p><small>Use at least 8 characters. The backend stores a password hash.</small></form></section></div>}
+    {authOpen && <div className="overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAuthOpen(false); }}><section className="cart-drawer auth-drawer" role="dialog" aria-modal="true" aria-labelledby="auth-title"><div className="drawer-heading"><div><span className="eyebrow">YOUR SHOP EZ ACCOUNT</span><h2 id="auth-title">{authMode === "register" ? "Join ShopEZ" : "Welcome back"}</h2></div><button className="icon-button" aria-label="Close sign in" onClick={() => setAuthOpen(false)}><Icon name="close" /></button></div><form className="auth-form" onSubmit={submitAuth}>{authMode === "register" && <label>Full name<input required minLength="2" maxLength="80" autoComplete="name" value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} /></label>}<label>Email address<input required type="email" autoComplete="email" readOnly={authStep === "verify"} value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} /></label>{authMode === "register" && <label>Mobile number <span>(optional)</span><input type="tel" autoComplete="tel" value={authForm.phone} onChange={(event) => setAuthForm({ ...authForm, phone: event.target.value })} /></label>}{authStep === "verify" && <label>Six-digit email code<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength="6" maxLength="6" value={otpCode} onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, "").slice(0, 6))} /></label>}<button className="primary-button checkout-button" type="submit" disabled={busy}>{busy ? "Please wait..." : authStep === "email" ? "Email me a sign-in code" : "Verify code and continue"} <Icon name="arrow" size={18} /></button>{authStep === "verify" && <div className="otp-actions"><button type="button" className="inline-action" disabled={busy} onClick={async () => { setBusy(true); try { const response = await API.post("/auth/otp/resend", { email: authForm.email.trim() }); notify(response.data.message || "A new code has been requested."); } catch (error) { notify(error.response?.data?.message || "Could not resend the code."); } finally { setBusy(false); } }}>Resend code</button><button type="button" className="inline-action" onClick={() => { setAuthStep("email"); setOtpCode(""); }}>Change email</button></div>}<p>{authMode === "register" ? "Already have an account?" : "New to ShopEZ?"} <button type="button" className="inline-action" onClick={() => { setAuthMode(authMode === "register" ? "login" : "register"); setAuthStep("email"); setOtpCode(""); }}>{authMode === "register" ? "Sign in" : "Create an account"}</button></p><small>{authStep === "email" ? "We'll email you a one-time code. It expires in 10 minutes." : "Check your inbox and spam folder. Codes expire after 10 minutes."}</small></form><div className="auth-divider"><span>OR</span></div>{GOOGLE_CLIENT_ID ? <div className="google-signin" ref={googleButtonRef} /> : <p className="google-config-note">Google sign-in will appear after REACT_APP_GOOGLE_CLIENT_ID is set in your local .env file.</p>}</section></div>}
 
     {sessionManagerOpen && <div className="overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSessionManagerOpen(false); }}><section className="cart-drawer sessions-drawer" role="dialog" aria-modal="true" aria-labelledby="sessions-title"><div className="drawer-heading"><div><span className="eyebrow">ACCOUNT SECURITY</span><h2 id="sessions-title">Signed-in devices</h2></div><button className="icon-button" aria-label="Close sessions" onClick={() => setSessionManagerOpen(false)}><Icon name="close" /></button></div><p className="sessions-intro">Your account can stay signed in on more than one device. You can end any session here.</p><div className="session-list">{sessions.map((session) => <article className="session-card" key={session.id}><div className="session-card-top"><strong>{session.deviceName || "Web browser"}</strong>{session.current && <span className="current-session">THIS DEVICE</span>}</div><small>Last active: {session.lastUsedAt ? new Date(session.lastUsedAt).toLocaleString() : "Recently"}</small><small>Signed in: {session.createdAt ? new Date(session.createdAt).toLocaleDateString() : "Unknown"}</small><button className="text-button session-revoke" onClick={() => revokeSession(session.id)}>{session.current ? "Sign out this device" : "Sign out device"} <Icon name="arrow" size={15} /></button></article>)}{sessions.length === 0 && <p>No active sessions were returned.</p>}</div><button className="danger-button" onClick={signOutAll}>Sign out of all devices</button><small className="session-security-note">Refresh tokens are stored as hashes on the backend and rotated when refreshed. Access tokens expire after 15 minutes.</small></section></div>}
 
     {cartOpen && <div className="overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCartOpen(false); }}><aside className="cart-drawer" aria-label="Shopping bag"><div className="drawer-heading"><div><span className="eyebrow">YOUR LITTLE COLLECTION</span><h2>Your bag <span>({cartCount})</span></h2></div><button className="icon-button" aria-label="Close bag" onClick={() => setCartOpen(false)}><Icon name="close" /></button></div>{cartCount === 0 ? <div className="empty-cart"><span className="empty-bag"><Icon name="bag" size={30} /></span><h3>Your bag is taking a nap.</h3><p>{token ? "Find something lovely and it'll show up here." : "Sign in to keep your bag synced between visits."}</p><button className="primary-button" onClick={() => { setCartOpen(false); if (!token) setAuthOpen(true); else document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" }); }}>{token ? "Explore the collection" : "Sign in to continue"} <Icon name="arrow" size={18} /></button></div> : <><div className="cart-items">{cartItems.map((item) => { const product = item.product; return <div className="cart-item" key={item._id}><img src={getImage(product)} alt="" /><div className="cart-item-details"><span className="product-category">{product.category}{product.brand ? ` · ${product.brand}` : ""}</span><h3>{product.name}</h3><strong>{money(product.price)}</strong><div className="quantity-control"><button aria-label={`Decrease ${product.name} quantity`} onClick={() => changeQuantity(item, Number(item.quantity) - 1)}><Icon name="minus" size={14} /></button><span>{item.quantity}</span><button aria-label={`Increase ${product.name} quantity`} disabled={Number(item.quantity) >= Number(product.stock || 0)} onClick={() => changeQuantity(item, Number(item.quantity) + 1)}><Icon name="plus" size={14} /></button></div></div><button className="remove-item" aria-label={`Remove ${product.name}`} onClick={() => changeQuantity(item, 0)}><Icon name="close" size={17} /></button></div>; })}</div><div className="cart-summary"><div><span>Subtotal</span><strong>{money(subtotal)}</strong></div><p>{subtotal >= 1499 ? "Free delivery applied." : `Estimated delivery fee: ${money(79)}.`}</p><button className="primary-button checkout-button" onClick={() => { if (!token) { setCartOpen(false); setAuthOpen(true); } else { setShipping((current) => ({ ...current, name: current.name || user?.name || "", email: current.email || user?.email || "" })); setCheckoutOpen(true); } }}>Continue to checkout <Icon name="arrow" size={18} /></button><small>Cash on delivery only. No online payment gateway is connected.</small></div></>}</aside></div>}
-    {checkoutOpen && <div className="overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCheckoutOpen(false); }}><section className="cart-drawer checkout-drawer" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><div className="drawer-heading"><div><span className="eyebrow">A FEW DETAILS TO DELIVER</span><h2 id="checkout-title">Delivery address</h2></div><button className="icon-button" aria-label="Close checkout" onClick={() => setCheckoutOpen(false)}><Icon name="close" /></button></div><form className="auth-form" onSubmit={submitCheckout}><label>Full name<input required value={shipping.name} onChange={(event) => setShipping({ ...shipping, name: event.target.value })} /></label><label>Email<input required type="email" value={shipping.email} onChange={(event) => setShipping({ ...shipping, email: event.target.value })} /></label><label>Mobile number<input required type="tel" minLength="10" value={shipping.phone} onChange={(event) => setShipping({ ...shipping, phone: event.target.value })} /></label><label>Address<input required value={shipping.address} onChange={(event) => setShipping({ ...shipping, address: event.target.value })} /></label><div className="checkout-fields"><label>City<input required value={shipping.city} onChange={(event) => setShipping({ ...shipping, city: event.target.value })} /></label><label>PIN code<input required inputMode="numeric" pattern="[0-9]{6}" value={shipping.pincode} onChange={(event) => setShipping({ ...shipping, pincode: event.target.value })} /></label></div><label>State<input required value={shipping.state} onChange={(event) => setShipping({ ...shipping, state: event.target.value })} /></label><div className="checkout-total"><span>Items subtotal</span><strong>{money(subtotal)}</strong></div><div className="checkout-total"><span>Delivery</span><strong>{subtotal >= 1499 ? "FREE" : money(79)}</strong></div><div className="checkout-total total-due"><span>Total due on delivery</span><strong>{money(subtotal + (subtotal >= 1499 ? 0 : 79))}</strong></div><button className="primary-button checkout-button" type="submit" disabled={busy || cartCount === 0}>{busy ? "Placing order..." : "Place cash-on-delivery order"} <Icon name="arrow" size={18} /></button><small>The backend validates product IDs and stock, then saves an order with pending payment status.</small></form></section></div>}
+    {checkoutOpen && <div className="overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCheckoutOpen(false); }}><section className="cart-drawer checkout-drawer" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><div className="drawer-heading"><div><span className="eyebrow">A FEW DETAILS TO DELIVER</span><h2 id="checkout-title">Delivery address</h2></div><button className="icon-button" aria-label="Close checkout" onClick={() => setCheckoutOpen(false)}><Icon name="close" /></button></div><form className="auth-form" onSubmit={submitCheckout}><label>Full name<input required value={shipping.name} onChange={(event) => setShipping({ ...shipping, name: event.target.value })} /></label><label>Email<input required type="email" value={shipping.email} onChange={(event) => setShipping({ ...shipping, email: event.target.value })} /></label><label>Mobile number<input required type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" title="Enter a valid 10-digit Indian mobile number" value={shipping.phone} onChange={(event) => setShipping({ ...shipping, phone: event.target.value.replace(/\D/g, "").slice(0, 10) })} /></label><label>Address<input required value={shipping.address} onChange={(event) => setShipping({ ...shipping, address: event.target.value })} /></label><div className="checkout-fields"><label>City<input required value={shipping.city} onChange={(event) => setShipping({ ...shipping, city: event.target.value })} /></label><label>PIN code<input required inputMode="numeric" pattern="[0-9]{6}" value={shipping.pincode} onChange={(event) => setShipping({ ...shipping, pincode: event.target.value })} /></label></div><label>State<input required value={shipping.state} onChange={(event) => setShipping({ ...shipping, state: event.target.value })} /></label><div className="checkout-total"><span>Items subtotal</span><strong>{money(subtotal)}</strong></div><div className="checkout-total"><span>Delivery</span><strong>{subtotal >= 1499 ? "FREE" : money(79)}</strong></div><div className="checkout-total total-due"><span>Total due on delivery</span><strong>{money(subtotal + (subtotal >= 1499 ? 0 : 79))}</strong></div><button className="primary-button checkout-button" type="submit" disabled={busy || cartCount === 0}>{busy ? "Placing order..." : "Place cash-on-delivery order"} <Icon name="arrow" size={18} /></button><small>The backend validates product IDs and stock, then saves an order with pending payment status.</small></form></section></div>}
   </div>;
 }
 
