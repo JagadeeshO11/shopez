@@ -94,3 +94,10 @@
 .danger-button:hover{background:#fbe9e3}
 .session-security-note{display:block;margin-top:14px;color:#898c82;font-size:9px;line-height:1.7}
 @media(max-width:700px){.session-list{max-height:42vh}.session-card{padding:12px}}
+
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0 8px;color:#8b8e83;font-size:9px;letter-spacing:.14em}
+.auth-divider::before,.auth-divider::after{content:"";height:1px;flex:1;background:var(--line)}
+.google-signin{display:flex;justify-content:center;min-height:42px}
+.google-config-note{text-align:center;font-size:10px;line-height:1.6;color:#898c82;margin:8px 0 0}
+.otp-actions{display:flex;justify-content:space-between;gap:12px;font-size:11px}
+.auth-form input[readonly]{background:#f1efe8;color:#72766d}
