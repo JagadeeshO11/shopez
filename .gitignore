@@ -21,3 +21,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local credentials must never be committed
+.env
+.env.*
+!.env.example
