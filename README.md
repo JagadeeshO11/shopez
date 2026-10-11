@@ -1,96 +1,90 @@
-# ShopEZ | Phase 1 Storefront
+# ShopEZ | Storefront connected to shopezbe
 
-A responsive React storefront for a staged MERN e-commerce learning project.
+A responsive Create React App storefront using the existing ShopEZ Express + MongoDB backend.
 
-> Phase 1 is a frontend demo. Products are sample data in `src/App.js`; cart and wishlist state live in React memory. Database, authentication, real orders and payments are not connected yet.
+## Connected capabilities
 
-## Phase 1 features
+- Loads product catalogue from `GET /api/v1/products`; product cards use MongoDB document IDs and backend fields.
+- Sign up and sign in through `POST /api/v1/auth/register` and `POST /api/v1/auth/login`.
+- JWT authentication is used for protected customer requests.
+- Persistent customer cart uses `/api/v1/cart` and `/api/v1/cart/items`.
+- Persistent wishlist uses `/api/v1/wishlist`.
+- Checkout submits an order through `POST /api/v1/orders` using cash on delivery. The current backend order route saves the order, validates submitted product IDs and stock, decreases stock and clears the cart.
+- Search, category filtering, sorting and Deals view run against the API-loaded product list.
+- Empty/loading/error states are shown if the backend cannot return products.
 
-- Responsive storefront with compact expandable search and navigation for Shop, Categories, Deals, Wishlist, About, and Contact
-- Product cards with category, brand, seller, SKU, stock status, delivery estimate, and warranty/return info
-- Category and seller filtering; search by product name, brand, seller, category, or SKU
-- Sorting by featured, price, rating, biggest discount, name, and seller
-- Sale pricing, ratings, product tags, and descriptions
-- **Demo data only:** seller names, stock, delivery estimates, and warranty/return labels are illustrative and must be replaced with verified backend data before launch
-- Wishlist toggles
-- Interactive shopping bag, quantity controls and subtotal
-- Empty states and add-to-cart notices
-- Mobile layout and reduced-motion support
+## API base URL
 
-## Run locally
+The default production API base is `https://shopezbe.vercel.app/api/v1`. Override it for local development by adding a `.env` file in the frontend root:
 
-This repository currently uses Create React App (React Scripts), not Vite. Keep the current build system for this phase so we can focus on learning the frontend rather than migrating tools at the same time.
+```dotenv
+REACT_APP_API_URL=http://localhost:5000/api/v1
+```
 
-1. Install Node.js LTS from https://nodejs.org/
-2. Clone the repo and enter the folder:
+Restart `npm start` after changing environment variables. Do not put MongoDB credentials, JWT secrets, or other private backend secrets into the frontend `.env`; variables prefixed with `REACT_APP_` are bundled into public browser code.
 
-   ```bash
-   git clone https://github.com/JagadeeshO11/shopez.git
-   cd shopez
-   ```
+## Run frontend locally
 
-3. Switch to the feature branch:
+```bash
+git clone https://github.com/JagadeeshO11/shopez.git
+cd shopez
+git checkout phase-1-storefront-rebuild
+npm install
+npm start
+```
 
-   ```bash
-   git checkout phase-1-storefront-rebuild
-   ```
+Open http://localhost:3000.
 
-4. Install the dependencies declared in package.json:
+Build check:
 
-   ```bash
-   npm install
-   ```
+```bash
+npm run build
+```
 
-5. Run the development server:
+## Run backend locally
 
-   ```bash
-   npm start
-   ```
+In a separate terminal:
 
-6. Open http://localhost:3000 in your browser.
+```bash
+git clone https://github.com/JagadeeshO11/shopezbe.git
+cd shopezbe
+npm install
+```
 
-7. Check if the app can compile for production:
+Create a local `.env` using `.env.example` as a template. Add a valid MongoDB Atlas URI and a long random `JWT_SECRET`. Keep `.env` private and never commit it.
 
-   ```bash
-   npm run build
-   ```
+```bash
+npm run dev
+```
 
-## Main files
+The backend listens on port 5000 by default. Verify `http://localhost:5000/api/health`. Then set the frontend `REACT_APP_API_URL` to `http://localhost:5000/api/v1` and restart the frontend.
 
-- `src/App.js`: sample products, UI, category filtering, search, sorting, wishlist and cart logic.
-- `src/App.css`: visual design, responsive breakpoints, product cards, navigation and cart drawer.
-- `src/index.js`: existing app entry point. It mounts React and the router.
-- `src/index.css`: global CSS. Phase 1 styling is scoped to the storefront stylesheet.
-- `public/index.html`: page metadata and the HTML root element where React mounts.
+## Seed data note
 
-## Commands explained for teaching
+The frontend no longer displays hard-coded sample products. The public product endpoint returns products stored in MongoDB. If the catalogue is empty, add product documents using the backend's admin-protected product creation route or a trusted seed script. Admin product creation requires a user with the `admin` role and a valid JWT. Never put admin credentials in frontend source code.
 
-| Command | What it does |
-| --- | --- |
-| `git clone <url>` | Downloads a working copy of a GitHub repository to your computer. |
-| `git checkout phase-1-storefront-rebuild` | Switches to our feature branch, keeping the main branch untouched. |
-| `npm install` | Installs project dependencies from package.json and package-lock.json. |
-| `npm start` | Starts the local development server with hot reload. |
-| `npm run build` | Compiles and optimizes the app for deployment. |
-| `git status` | Shows changed, staged and untracked files. |
-| `git diff` | Reviews code edits before saving a checkpoint. |
-| `git add src/App.js src/App.css README.md` | Stages the files we intend to include in a commit. |
-| `git commit -m "Build Phase 1 storefront"` | Creates a versioned checkpoint with a message describing the change. |
-| `git push -u origin phase-1-storefront-rebuild` | Uploads the branch to GitHub and links the local branch to it. |
+## User flow
 
-## Learn the code in order
+1. Register or sign in with email and password.
+2. Add products to the bag or wishlist.
+3. Reopen the app while signed in to load the backend-saved cart and wishlist.
+4. Fill delivery address details and place a cash-on-delivery order.
+5. Orders and stock changes are managed by the backend.
 
-1. **JavaScript data:** inspect the `PRODUCTS` array. Each object describes one product, including `category`, `brand`, `seller`, `sku`, `stock`, `delivery`, `warranty`, `price`, `oldPrice`, `rating`, and `tag`.
-2. **React state:** `useState` holds selected category, search text, current view (Shop, Deals, or Wishlist), sort choice, cart quantities and favourites.
-3. **Derived data:** `useMemo` filters by category, seller, or current view; searches across product metadata; and sorts by price, rating, discount, name, or seller when the relevant state changes.
-4. **Rendering lists:** `.map()` creates category tabs and product cards. The `key` prop helps React track list items.
-5. **Events:** `onClick` and `onChange` call functions when users interact with buttons and fields.
-6. **Cart math:** `addToCart` changes a quantity; `subtotal` combines each product's price and quantity.
-7. **Responsive CSS:** read the media queries at the end of `App.css` to see how layouts adapt for smaller screens.
+## Important limits to address before production
 
-## Next phases
+- Google sign-in, OTP/mobile login, online payment gateway, refunds, delivery-partner onboarding and admin UI are not connected in this pass.
+- Checkout currently uses cash on delivery because the backend has no payment-provider verification route.
+- Verify the API deployment, CORS allowlist, MongoDB connection, JWT secret and seed product catalogue before release.
+- The current backend order route updates stock after order creation without a MongoDB transaction. Add transactional stock reservation to avoid race conditions before handling real traffic.
+- Review validation and auth hardening in the backend before public production use.
 
-- **Phase 2:** add an Express API, MongoDB/Mongoose product model, and load products from the API.
-- **Phase 3:** implement secure authentication, order creation, server-side price and stock validation, and admin-only product management.
-- **Phase 4:** integrate a payment provider with server-side verification and webhook handling.
-- **Before production:** add tests, server validation, security headers, image fallbacks, shipping/returns/privacy pages and real inventory data.
+## What the key code teaches
+
+- `axios.create({ baseURL })`: centralises API URL and timeout settings.
+- `useEffect`: loads products and signed-in customer data from the backend.
+- `useState`: stores API results and current UI state.
+- `useMemo`: derives filtered products and totals without duplicating catalogue data.
+- `Authorization: Bearer <token>`: sends the backend-issued JWT to protected endpoints.
+- `npm start`: starts the frontend development server.
+- `npm run build`: creates an optimised production bundle.
