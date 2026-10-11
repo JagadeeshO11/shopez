@@ -5,8 +5,11 @@ A responsive Create React App storefront using the existing ShopEZ Express + Mon
 ## Connected capabilities
 
 - Loads product catalogue from `GET /api/v1/products`; product cards use MongoDB document IDs and backend fields.
-- Sign up and sign in through `POST /api/v1/auth/register` and `POST /api/v1/auth/login`.
-- JWT authentication is used for protected customer requests.
+- Email/password sign up and sign in through `POST /api/v1/auth/register` and `POST /api/v1/auth/login`.
+- Short-lived access JWTs (15 minutes by default) are held in frontend memory; refresh tokens are HttpOnly cookies and are never written to localStorage.
+- Every browser/device login creates a separate MongoDB session. Refresh tokens are stored as SHA-256 hashes and rotated on refresh.
+- Account security screen lists active devices, supports signing out one device, and supports signing out all devices.
+- Access tokens are bound to a session so revoked sessions stop authorizing protected API requests.
 - Persistent customer cart uses `/api/v1/cart` and `/api/v1/cart/items`.
 - Persistent wishlist uses `/api/v1/wishlist`.
 - Checkout submits an order through `POST /api/v1/orders` using cash on delivery. The current backend order route saves the order, validates submitted product IDs and stock, decreases stock and clears the cart.
@@ -73,10 +76,12 @@ The frontend no longer displays hard-coded sample products. The public product e
 
 ## Important limits to address before production
 
-- Google sign-in, OTP/mobile login, online payment gateway, refunds, delivery-partner onboarding and admin UI are not connected in this pass.
+- Email verification/OTP, password reset, Google sign-in, mobile OTP, online payment gateway, refunds, delivery-partner onboarding and admin UI are not connected in this pass. Email/password login and multi-device session management are implemented.
 - Checkout currently uses cash on delivery because the backend has no payment-provider verification route.
 - Verify the API deployment, CORS allowlist, MongoDB connection, JWT secret and seed product catalogue before release.
 - The current backend order route updates stock after order creation without a MongoDB transaction. Add transactional stock reservation to avoid race conditions before handling real traffic.
+- Set `JWT_SECRET` to a long random secret, and optionally set `ACCESS_TOKEN_TTL=15m` and `REFRESH_TOKEN_DAYS=30` in backend environment variables. Never expose these values in frontend environment variables.
+- The backend must be redeployed after backend commits before the frontend can use the new refresh/session endpoints.
 - Review validation and auth hardening in the backend before public production use.
 
 ## What the key code teaches
