@@ -1,70 +1,95 @@
-# Getting Started with Create React App
+# ShopEZ | Storefront connected to shopezbe
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A responsive Create React App storefront using the existing ShopEZ Express + MongoDB backend.
 
-## Available Scripts
+## Connected capabilities
 
-In the project directory, you can run:
+- Loads product catalogue from `GET /api/v1/products`; product cards use MongoDB document IDs and backend fields.
+- Email/password sign up and sign in through `POST /api/v1/auth/register` and `POST /api/v1/auth/login`.
+- Short-lived access JWTs (15 minutes by default) are held in frontend memory; refresh tokens are HttpOnly cookies and are never written to localStorage.
+- Every browser/device login creates a separate MongoDB session. Refresh tokens are stored as SHA-256 hashes and rotated on refresh.
+- Account security screen lists active devices, supports signing out one device, and supports signing out all devices.
+- Access tokens are bound to a session so revoked sessions stop authorizing protected API requests.
+- Persistent customer cart uses `/api/v1/cart` and `/api/v1/cart/items`.
+- Persistent wishlist uses `/api/v1/wishlist`.
+- Checkout submits an order through `POST /api/v1/orders` using cash on delivery. The current backend order route saves the order, validates submitted product IDs and stock, decreases stock and clears the cart.
+- Search, category filtering, sorting and Deals view run against the API-loaded product list.
+- Empty/loading/error states are shown if the backend cannot return products.
 
-### `npm start`
+## API base URL
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The default production API base is `https://shopezbe.vercel.app/api/v1`. Override it for local development by adding a `.env` file in the frontend root:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```dotenv
+REACT_APP_API_URL=http://localhost:5000/api/v1
+```
 
-### `npm test`
+Restart `npm start` after changing environment variables. Do not put MongoDB credentials, JWT secrets, or other private backend secrets into the frontend `.env`; variables prefixed with `REACT_APP_` are bundled into public browser code.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Run frontend locally
 
-### `npm run build`
+```bash
+git clone https://github.com/JagadeeshO11/shopez.git
+cd shopez
+git checkout phase-1-storefront-rebuild
+npm install
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Open http://localhost:3000.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Build check:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm run build
+```
 
-### `npm run eject`
+## Run backend locally
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+In a separate terminal:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+git clone https://github.com/JagadeeshO11/shopezbe.git
+cd shopezbe
+npm install
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Create a local `.env` using `.env.example` as a template. Add a valid MongoDB Atlas URI and a long random `JWT_SECRET`. Keep `.env` private and never commit it.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+npm run dev
+```
 
-## Learn More
+The backend listens on port 5000 by default. Verify `http://localhost:5000/api/health`. Then set the frontend `REACT_APP_API_URL` to `http://localhost:5000/api/v1` and restart the frontend.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Seed data note
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The frontend no longer displays hard-coded sample products. The public product endpoint returns products stored in MongoDB. If the catalogue is empty, add product documents using the backend's admin-protected product creation route or a trusted seed script. Admin product creation requires a user with the `admin` role and a valid JWT. Never put admin credentials in frontend source code.
 
-### Code Splitting
+## User flow
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. Register or sign in with email and password.
+2. Add products to the bag or wishlist.
+3. Reopen the app while signed in to load the backend-saved cart and wishlist.
+4. Fill delivery address details and place a cash-on-delivery order.
+5. Orders and stock changes are managed by the backend.
 
-### Analyzing the Bundle Size
+## Important limits to address before production
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- Email verification/OTP, password reset, Google sign-in, mobile OTP, online payment gateway, refunds, delivery-partner onboarding and admin UI are not connected in this pass. Email/password login and multi-device session management are implemented.
+- Checkout currently uses cash on delivery because the backend has no payment-provider verification route.
+- Verify the API deployment, CORS allowlist, MongoDB connection, JWT secret and seed product catalogue before release.
+- The current backend order route updates stock after order creation without a MongoDB transaction. Add transactional stock reservation to avoid race conditions before handling real traffic.
+- Set `JWT_SECRET` to a long random secret, and optionally set `ACCESS_TOKEN_TTL=15m` and `REFRESH_TOKEN_DAYS=30` in backend environment variables. Never expose these values in frontend environment variables.
+- The backend must be redeployed after backend commits before the frontend can use the new refresh/session endpoints.
+- Review validation and auth hardening in the backend before public production use.
 
-### Making a Progressive Web App
+## What the key code teaches
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- `axios.create({ baseURL })`: centralises API URL and timeout settings.
+- `useEffect`: loads products and signed-in customer data from the backend.
+- `useState`: stores API results and current UI state.
+- `useMemo`: derives filtered products and totals without duplicating catalogue data.
+- `Authorization: Bearer <token>`: sends the backend-issued JWT to protected endpoints.
+- `npm start`: starts the frontend development server.
+- `npm run build`: creates an optimised production bundle.
