@@ -1,24 +1,25 @@
 # ShopEZ | Phase 1 Storefront
 
-A responsive React storefront built as the first stage of a MERN e-commerce learning project.
+A responsive React storefront for a staged MERN e-commerce learning project.
 
-> This is a frontend demo. Products are sample data in `src/App.js`; cart state is held in React memory. No real database, authentication, orders, or payments are connected yet.
+> Phase 1 is a frontend demo. Products are sample data in `src/App.js`; cart and wishlist state live in React memory. Database, authentication, real orders and payments are not connected yet.
 
 ## Phase 1 features
 
 - Responsive storefront and navigation
-- Product cards, categories, search, sorting, ratings and sale pricing
+- Product cards, category filtering, search and sort
+- Sale pricing, ratings and product descriptions
 - Wishlist toggles
-- Interactive shopping bag with quantity controls and subtotal
-- Empty states, accessible labels and add-to-cart notifications
-- Mobile-friendly layout and reduced-motion support
+- Interactive shopping bag, quantity controls and subtotal
+- Empty states and add-to-cart notices
+- Mobile layout and reduced-motion support
 
 ## Run locally
 
-This repository currently uses Create React App (React Scripts) rather than Vite. Keep the current package setup for Phase 1 to avoid mixing build systems during the first rebuild.
+This repository currently uses Create React App (React Scripts), not Vite. Keep the current build system for this phase so we can focus on learning the frontend rather than migrating tools at the same time.
 
 1. Install Node.js LTS from https://nodejs.org/
-2. Clone the repository and change into its folder:
+2. Clone the repo and enter the folder:
 
    ```bash
    git clone https://github.com/JagadeeshO11/shopez.git
@@ -31,62 +32,62 @@ This repository currently uses Create React App (React Scripts) rather than Vite
    git checkout phase-1-storefront-rebuild
    ```
 
-4. Install dependencies:
+4. Install the dependencies declared in package.json:
 
    ```bash
    npm install
    ```
 
-5. Start the development server:
+5. Run the development server:
 
    ```bash
    npm start
    ```
 
-6. Open http://localhost:3000
+6. Open http://localhost:3000 in your browser.
 
-7. Check the production build:
+7. Check if the app can compile for production:
 
    ```bash
    npm run build
    ```
 
-## How the code works
+## Main files
 
-- `src/App.js`: holds sample product data, page structure, category filtering, search, sorting, wishlist state, cart state and subtotal logic.
-- `src/App.css`: contains the storefront design system, responsive breakpoints, product grid, drawer and interaction states.
-- `src/index.js`: existing Create React App entry point. The rebuild deliberately leaves the app bootstrapping and installed dependencies intact.
-- `src/index.css`: existing global base styles. The storefront-specific design is scoped to `App.css`.
-- `public/index.html`: document metadata and the HTML root element used by React.
+- `src/App.js`: sample products, UI, category filtering, search, sorting, wishlist and cart logic.
+- `src/App.css`: visual design, responsive breakpoints, product cards, navigation and cart drawer.
+- `src/index.js`: existing app entry point. It mounts React and the router.
+- `src/index.css`: global CSS. Phase 1 styling is scoped to the storefront stylesheet.
+- `public/index.html`: page metadata and the HTML root element where React mounts.
 
-## Teaching notes: the commands and why
+## Commands explained for teaching
 
-| Command | Why we use it |
+| Command | What it does |
 | --- | --- |
-| `git clone <url>` | Creates a local copy of the repository. |
-| `git checkout phase-1-storefront-rebuild` | Moves work onto the feature branch instead of editing `main`. |
-| `npm install` | Installs the dependencies declared in `package.json`. |
+| `git clone <url>` | Downloads a working copy of a GitHub repository to your computer. |
+| `git checkout phase-1-storefront-rebuild` | Switches to our feature branch, keeping the main branch untouched. |
+| `npm install` | Installs project dependencies from package.json and package-lock.json. |
 | `npm start` | Starts the local development server with hot reload. |
-| `npm run build` | Creates an optimized production build and catches many compile-time issues. |
-| `git status` | Shows files changed locally. |
-| `git add src/App.js src/App.css README.md` | Stages only the intended changes. |
-| `git commit -m "Build Phase 1 storefront"` | Records a checkpoint with a descriptive message. |
-| `git push -u origin phase-1-storefront-rebuild` | Uploads the feature branch to GitHub. |
-| `git diff` | Reviews what changed before committing. |
+| `npm run build` | Compiles and optimizes the app for deployment. |
+| `git status` | Shows changed, staged and untracked files. |
+| `git diff` | Reviews code edits before saving a checkpoint. |
+| `git add src/App.js src/App.css README.md` | Stages the files we intend to include in a commit. |
+| `git commit -m "Build Phase 1 storefront"` | Creates a versioned checkpoint with a message describing the change. |
+| `git push -u origin phase-1-storefront-rebuild` | Uploads the branch to GitHub and links the local branch to it. |
 
-## Suggested learning order
+## Learn the code in order
 
-1. Read the `PRODUCTS` array and understand JavaScript objects and arrays.
-2. Learn React state: `useState` stores cart, category, search and sort choices.
-3. Learn derived data: `useMemo` filters and sorts products when relevant inputs change.
-4. Learn rendering arrays with `map()` and stable React `key` values.
-5. Learn event handlers such as `onClick` and `onChange`.
-6. Trace how `addToCart` updates quantities and how subtotal is calculated from product data.
-7. Read `App.css` from desktop styles to responsive media queries.
+1. **JavaScript data:** inspect the `PRODUCTS` array. Each object describes one product.
+2. **React state:** `useState` holds selected category, search text, sort choice, cart quantities and favourites.
+3. **Derived data:** `useMemo` filters and sorts the products when the relevant state changes.
+4. **Rendering lists:** `.map()` creates category tabs and product cards. The `key` prop helps React track list items.
+5. **Events:** `onClick` and `onChange` call functions when users interact with buttons and fields.
+6. **Cart math:** `addToCart` changes a quantity; `subtotal` combines each product's price and quantity.
+7. **Responsive CSS:** read the media queries at the end of `App.css` to see how layouts adapt for smaller screens.
 
 ## Next phases
 
-- **Phase 2:** add Express API, MongoDB/Mongoose product model and API-driven product listing.
-- **Phase 3:** secure registration/login, customer order creation, server-side price and stock validation, admin-only product management.
+- **Phase 2:** add an Express API, MongoDB/Mongoose product model, and load products from the API.
+- **Phase 3:** implement secure authentication, order creation, server-side price and stock validation, and admin-only product management.
 - **Phase 4:** integrate a payment provider with server-side verification and webhook handling.
-- **Before production:** add tests, error handling, image fallbacks, security headers, input validation, privacy/returns/shipping pages and real inventory data.
+- **Before production:** add tests, server validation, security headers, image fallbacks, shipping/returns/privacy pages and real inventory data.
