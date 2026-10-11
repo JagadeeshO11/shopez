@@ -42,6 +42,8 @@ function App() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("featured");
   const [seller, setSeller] = useState("All sellers");
+  const [currentView, setCurrentView] = useState("shop");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [saved, setSaved] = useState([]);
@@ -50,9 +52,10 @@ function App() {
     let result = PRODUCTS.filter((product) => {
       const matchesCategory = category === "All products" || product.category === category;
       const matchesSeller = seller === "All sellers" || product.seller === seller;
+      const matchesView = currentView === "wishlist" ? saved.includes(product.id) : currentView === "deals" ? product.price < product.oldPrice : true;
       const searchable = `${product.name} ${product.brand} ${product.seller} ${product.category} ${product.sku}`.toLowerCase();
       const matchesQuery = searchable.includes(query.toLowerCase());
-      return matchesCategory && matchesSeller && matchesQuery;
+      return matchesCategory && matchesSeller && matchesQuery && matchesView;
     });
     if (sort === "price-low") result = [...result].sort((a, b) => a.price - b.price);
     if (sort === "price-high") result = [...result].sort((a, b) => b.price - a.price);
@@ -61,7 +64,7 @@ function App() {
     if (sort === "discount") result = [...result].sort((a, b) => (1 - a.price / a.oldPrice) - (1 - b.price / b.oldPrice));
     if (sort === "name") result = [...result].sort((a, b) => a.name.localeCompare(b.name));
     return result;
-  }, [category, query, seller, sort]);
+  }, [category, currentView, query, saved, seller, sort]);
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
   const subtotal = PRODUCTS.reduce((sum, product) => sum + product.price * (cart[product.id] || 0), 0);
   const addToCart = (product) => {
@@ -76,6 +79,17 @@ function App() {
     return next;
   });
   const toggleSaved = (id) => setSaved((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+  const navigateTo = (view, target) => {
+    setCurrentView(view);
+    setDrawerOpen(false);
+    if (view === "shop" || view === "deals" || view === "wishlist") {
+      setCategory("All products");
+      setSeller("All sellers");
+      setQuery("");
+      if (view === "deals") setSort("discount");
+    }
+    if (target) document.getElementById(target)?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return <div className="storefront">
     <div className="announcement"><span>THE LITTLE THINGS, DELIVERED WITH CARE</span><span className="announcement-right">Free delivery on orders over ₹1,499 <span aria-hidden="true">↗</span></span></div>
@@ -83,14 +97,19 @@ function App() {
       <button className="icon-button mobile-menu" aria-label="Open menu" onClick={() => setDrawerOpen(!drawerOpen)}><Icon name="menu" /></button>
       <a className="wordmark" href="#top" aria-label="ShopEZ home">shop<span>ez</span><i>.</i></a>
       <nav className={`main-nav ${drawerOpen ? "nav-open" : ""}`} aria-label="Main navigation">
-        <a className="active" href="#shop" onClick={() => setDrawerOpen(false)}>Shop all</a>
-        <a href="#shop" onClick={() => { setCategory("Fashion"); setDrawerOpen(false); }}>Fashion</a>
-        <a href="#shop" onClick={() => { setCategory("Electronics"); setDrawerOpen(false); }}>Tech & gadgets</a>
-        <a href="#story" onClick={() => setDrawerOpen(false)}>Our story</a>
+        <button className={currentView === "shop" ? "nav-active" : ""} onClick={() => navigateTo("shop", "shop")}>Shop</button>
+        <button onClick={() => { setCurrentView("shop"); setCategory("All products"); setDrawerOpen(false); document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" }); }}>Categories</button>
+        <button className={currentView === "deals" ? "nav-active" : ""} onClick={() => navigateTo("deals", "shop")}>Deals</button>
+        <button className={currentView === "wishlist" ? "nav-active" : ""} onClick={() => navigateTo("wishlist", "shop")}>Wishlist <span className="nav-count">{saved.length}</span></button>
+        <button onClick={() => { setDrawerOpen(false); document.getElementById("story")?.scrollIntoView({ behavior: "smooth" }); }}>About</button>
+        <a href="mailto:hello@shopez.example" onClick={() => setDrawerOpen(false)}>Contact</a>
       </nav>
       <div className="header-actions">
-        <label className="header-search"><Icon name="search" size={18} /><input aria-label="Search products" placeholder="Search anything..." value={query} onChange={(event) => { setQuery(event.target.value); document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" }); }} /></label>
-        <button className="icon-button wishlist-button" aria-label={`Wishlist, ${saved.length} saved`} onClick={() => { setNotice(saved.length ? `${saved.length} item(s) saved to your favourites` : "Tap the heart on any product to save it"); window.setTimeout(() => setNotice(""), 2200); }}><Icon name="heart" /></button>
+        <div className={`search-wrap ${searchOpen ? "search-open" : ""}`}>
+          {searchOpen && <input autoFocus aria-label="Search products" placeholder="Name, brand, seller or SKU..." value={query} onChange={(event) => { setQuery(event.target.value); setCurrentView("shop"); }} onKeyDown={(event) => { if (event.key === "Escape") { setSearchOpen(false); setQuery(""); } if (event.key === "Enter") document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" }); }} />}
+          <button className="icon-button search-toggle" aria-label={searchOpen ? "Close search" : "Open search"} onClick={() => { if (searchOpen) { setSearchOpen(false); setQuery(""); } else { setSearchOpen(true); setCurrentView("shop"); } }}><Icon name={searchOpen ? "close" : "search"} size={19} /></button>
+        </div>
+        <button className={`icon-button wishlist-button ${currentView === "wishlist" ? "action-active" : ""}`} aria-label={`Open wishlist, ${saved.length} saved`} onClick={() => navigateTo("wishlist", "shop")}><Icon name="heart" /></button>
         <button className="bag-button" aria-label={`Open shopping bag, ${cartCount} items`} onClick={() => setCartOpen(true)}><Icon name="bag" size={19} /><span className="bag-label">Bag</span><span className="bag-count">{cartCount}</span></button>
       </div>
     </header>
@@ -100,11 +119,11 @@ function App() {
         <div className="hero-visual"><div className="hero-sun" /><div className="hero-image image-back"><img src="https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=900&q=85" alt="A calm, sunlit lifestyle interior" /></div><div className="hero-image image-front"><img src="https://images.unsplash.com/photo-1547949003-9792a18a2601?auto=format&fit=crop&w=800&q=85" alt="Minimal everyday bag in warm neutral tones" /></div><div className="floating-note"><span>✳</span><div><strong>Picked with purpose</strong><small>Made for your everyday</small></div></div><div className="hero-stamp">GOOD<br />THINGS<br /><span>INSIDE</span></div></div>
         <div className="hero-bottom-note"><span>01 / THE EVERYDAY EDIT</span><span>SCROLL TO DISCOVER ↓</span></div>
       </section>
-      <section className="category-strip" aria-label="Shop by category">{CATEGORIES.map((item) => <button key={item.name} className={`category-tile ${item.tone} ${category === item.name ? "selected" : ""}`} onClick={() => { setCategory(item.name); document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" }); }}><span className="category-icon">{item.icon}</span><span>{item.name}</span><Icon name="arrow" size={16} /></button>)}</section>
+      <section className="category-strip" id="categories" aria-label="Shop by category">{CATEGORIES.map((item) => <button key={item.name} className={`category-tile ${item.tone} ${category === item.name ? "selected" : ""}`} onClick={() => { setCategory(item.name); document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" }); }}><span className="category-icon">{item.icon}</span><span>{item.name}</span><Icon name="arrow" size={16} /></button>)}</section>
       <section className="product-section" id="shop">
-        <div className="section-heading"><div><div className="eyebrow">THE GOOD STUFF</div><h2>Find your <em>favourite.</em></h2><p>Useful things. Lovely details. Zero overthinking.</p></div><label className="sort-select">Sort by <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort products"><option value="featured">Featured</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="rating">Top rated</option><option value="discount">Biggest discount</option><option value="name">Name: A to Z</option><option value="seller">Seller: A to Z</option></select></label></div>
+        <div className="section-heading"><div><div className="eyebrow">{currentView === "wishlist" ? "YOUR SAVED PICKS" : currentView === "deals" ? "GOOD THINGS, BETTER PRICES" : "THE GOOD STUFF"}</div><h2>{currentView === "wishlist" ? <>Your <em>wishlist.</em></> : currentView === "deals" ? <>Little <em>deals.</em></> : <>Find your <em>favourite.</em></>}</h2><p>{currentView === "wishlist" ? "Your favourite finds, all in one place." : currentView === "deals" ? "Browse every item currently marked down." : "Useful things. Lovely details. Zero overthinking."}</p></div><label className="sort-select">Sort by <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort products"><option value="featured">Featured</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="rating">Top rated</option><option value="discount">Biggest discount</option><option value="name">Name: A to Z</option><option value="seller">Seller: A to Z</option></select></label></div>
         <div className="filter-row"><div className="filter-tabs">{CATEGORIES.map((item) => <button key={item.name} className={category === item.name ? "filter-active" : ""} onClick={() => setCategory(item.name)}>{item.name}</button>)}</div><label className="seller-select">Seller <select value={seller} onChange={(event) => setSeller(event.target.value)} aria-label="Filter by seller"><option>All sellers</option>{[...new Set(PRODUCTS.map((product) => product.seller))].sort().map((name) => <option key={name}>{name}</option>)}</select></label><span className="product-count">{filteredProducts.length} finds</span></div>
-        {filteredProducts.length ? <div className="product-grid">{filteredProducts.map((product, index) => <article className="product-card" key={product.id} style={{ "--card-index": index }}><div className="product-image-wrap"><img src={product.image} alt={product.name} loading="lazy" /><span className="product-tag">{product.tag}</span><button className={`save-button ${saved.includes(product.id) ? "is-saved" : ""}`} aria-label={saved.includes(product.id) ? `Remove ${product.name} from favourites` : `Save ${product.name} to favourites`} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button><button className="quick-add" onClick={() => addToCart(product)}><Icon name="plus" size={17} /> Add to bag</button></div><div className="product-meta"><div><span className="product-category">{product.category} · {product.brand}</span><h3>{product.name}</h3></div><span className="rating">★ {product.rating}</span></div><p className="product-description">{product.description}</p><div className="product-details"><span>Sold by <strong>{product.seller}</strong></span><span>SKU: {product.sku}</span><span className={product.stock <= 10 ? "stock-low" : "stock-ok"}>{product.stock <= 10 ? `Only ${product.stock} left` : `${product.stock} in stock`}</span><span>Delivery: {product.delivery}</span><span>{product.warranty}</span></div><div className="price-line"><strong>{money(product.price)}</strong><del>{money(product.oldPrice)}</del><span className="discount">{Math.round((1 - product.price / product.oldPrice) * 100)}% off</span></div></article>)}</div> : <div className="empty-results"><span>⌕</span><h3>No finds just yet</h3><p>Try another search or category.</p><button className="text-button" onClick={() => { setQuery(""); setCategory("All products"); setSeller("All sellers"); }}>Show all products <Icon name="arrow" size={16} /></button></div>}
+        {filteredProducts.length ? <div className="product-grid">{filteredProducts.map((product, index) => <article className="product-card" key={product.id} style={{ "--card-index": index }}><div className="product-image-wrap"><img src={product.image} alt={product.name} loading="lazy" /><span className="product-tag">{product.tag}</span><button className={`save-button ${saved.includes(product.id) ? "is-saved" : ""}`} aria-label={saved.includes(product.id) ? `Remove ${product.name} from favourites` : `Save ${product.name} to favourites`} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button><button className="quick-add" onClick={() => addToCart(product)}><Icon name="plus" size={17} /> Add to bag</button></div><div className="product-meta"><div><span className="product-category">{product.category} · {product.brand}</span><h3>{product.name}</h3></div><span className="rating">★ {product.rating}</span></div><p className="product-description">{product.description}</p><div className="product-details"><span>Sold by <strong>{product.seller}</strong></span><span>SKU: {product.sku}</span><span className={product.stock <= 10 ? "stock-low" : "stock-ok"}>{product.stock <= 10 ? `Only ${product.stock} left` : `${product.stock} in stock`}</span><span>Delivery: {product.delivery}</span><span>{product.warranty}</span></div><div className="price-line"><strong>{money(product.price)}</strong><del>{money(product.oldPrice)}</del><span className="discount">{Math.round((1 - product.price / product.oldPrice) * 100)}% off</span></div></article>)}</div> : <div className="empty-results"><span>⌕</span><h3>No finds just yet</h3><p>Try another search or category.</p><button className="text-button" onClick={() => { setQuery(""); setCategory("All products"); setSeller("All sellers"); setCurrentView("shop"); }}>Show all products <Icon name="arrow" size={16} /></button></div>}
         <div className="collection-end"><span>YOU'VE SEEN THE GOOD STUFF</span><span>MORE GOOD THINGS COMING SOON ✳</span></div>
       </section>
       <section className="story-band" id="story"><div className="story-mark">s<span>e.</span></div><div><div className="eyebrow">A SMALL SHOP WITH BIG HEART</div><h2>Less scrolling.<br /><em>More loving what you find.</em></h2><p>We believe shopping should feel simple, personal, and a little delightful. That's the whole idea behind ShopEZ.</p></div><a className="story-link" href="#shop">Find your next favourite <Icon name="arrow" size={18} /></a></section>
