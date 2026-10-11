@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_BASE_URL = (process.env.REACT_APP_API_URL || "https://shopezbe.vercel.app/api/v1").replace(/\/$/, "");
+const API_BASE_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
 const API_ROOT = API_BASE_URL.replace(/\/api\/v1$/, "");
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "";
 const API = axios.create({ baseURL: API_BASE_URL, timeout: 15000, withCredentials: true });
@@ -168,7 +168,7 @@ function App() {
     if (user) setShipping((current) => ({
       ...current,
       name: current.name || user.name || "",
-      phone: current.phone || user.phone || "",
+      phone: current.phone || String(user.phone || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "").slice(0, 10),
       email: current.email || user.email || "",
       address: current.address || user.address || "",
     }));
