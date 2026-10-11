@@ -6,7 +6,7 @@ A responsive React storefront for a staged MERN e-commerce learning project.
 
 ## Phase 1 features
 
-- Responsive storefront and navigation
+- Responsive storefront with compact expandable search and navigation for Shop, Categories, Deals, Wishlist, About, and Contact
 - Product cards with category, brand, seller, SKU, stock status, delivery estimate, and warranty/return info
 - Category and seller filtering; search by product name, brand, seller, category, or SKU
 - Sorting by featured, price, rating, biggest discount, name, and seller
@@ -81,8 +81,8 @@ This repository currently uses Create React App (React Scripts), not Vite. Keep 
 ## Learn the code in order
 
 1. **JavaScript data:** inspect the `PRODUCTS` array. Each object describes one product, including `category`, `brand`, `seller`, `sku`, `stock`, `delivery`, `warranty`, `price`, `oldPrice`, `rating`, and `tag`.
-2. **React state:** `useState` holds selected category, search text, sort choice, cart quantities and favourites.
-3. **Derived data:** `useMemo` filters by category and seller, searches across product metadata, and sorts by price, rating, discount, name, or seller when the relevant state changes.
+2. **React state:** `useState` holds selected category, search text, current view (Shop, Deals, or Wishlist), sort choice, cart quantities and favourites.
+3. **Derived data:** `useMemo` filters by category, seller, or current view; searches across product metadata; and sorts by price, rating, discount, name, or seller when the relevant state changes.
 4. **Rendering lists:** `.map()` creates category tabs and product cards. The `key` prop helps React track list items.
 5. **Events:** `onClick` and `onChange` call functions when users interact with buttons and fields.
 6. **Cart math:** `addToCart` changes a quantity; `subtotal` combines each product's price and quantity.
