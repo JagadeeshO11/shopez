@@ -79,3 +79,18 @@
 .checkout-total.total-due{font-size:13px;color:var(--dark);font-weight:700}
 .api-error small{display:block;margin-top:12px;font-size:9px;color:#8b8e83;overflow-wrap:anywhere}
 @media(max-width:700px){.account-name{font-size:9px}.checkout-fields{grid-template-columns:1fr}.auth-drawer,.checkout-drawer{width:100%;max-height:100dvh}.auth-form{padding-bottom:8px}}
+
+
+/* Multi-device account sessions */
+.sessions-intro{font-size:12px;line-height:1.7;color:#777c73;margin:18px 0 8px}
+.session-list{display:flex;flex-direction:column;gap:10px;max-height:48vh;overflow:auto;padding:8px 2px 14px}
+.session-card{border:1px solid var(--line);background:#fffdf8;padding:14px;display:flex;flex-direction:column;gap:7px}
+.session-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.session-card-top strong{font-size:12px;color:var(--ink)}
+.session-card small{font-size:10px;color:#828579;overflow-wrap:anywhere}
+.current-session{font-size:8px;letter-spacing:.1em;font-weight:800;color:#416548;background:#e8f0e5;padding:5px 7px;white-space:nowrap}
+.session-revoke{align-self:flex-start;margin-top:4px}
+.danger-button{width:100%;padding:13px 15px;border:1px solid #b75b4a;background:#fff8f5;color:#9c3e31;font-size:11px;font-weight:700;cursor:pointer}
+.danger-button:hover{background:#fbe9e3}
+.session-security-note{display:block;margin-top:14px;color:#898c82;font-size:9px;line-height:1.7}
+@media(max-width:700px){.session-list{max-height:42vh}.session-card{padding:12px}}
