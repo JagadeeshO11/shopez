@@ -58,7 +58,7 @@ function App() {
     if (sort === "price-high") result = [...result].sort((a, b) => b.price - a.price);
     if (sort === "rating") result = [...result].sort((a, b) => b.rating - a.rating);
     if (sort === "seller") result = [...result].sort((a, b) => a.seller.localeCompare(b.seller));
-    if (sort === "discount") result = [...result].sort((a, b) => (1 - b.price / b.oldPrice) - (1 - a.price / a.oldPrice));
+    if (sort === "discount") result = [...result].sort((a, b) => (1 - a.price / a.oldPrice) - (1 - b.price / b.oldPrice));
     if (sort === "name") result = [...result].sort((a, b) => a.name.localeCompare(b.name));
     return result;
   }, [category, query, seller, sort]);
